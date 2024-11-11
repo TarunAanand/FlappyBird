@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.desktop.UserSessionEvent;
 import java.awt.event.*;
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -157,6 +158,7 @@ public class Loginpage extends JPanel {
                 String password = new String(passwordField.getPassword());
 
                 if (mongoDB.validateUser(username, password)) {
+                    UserSession.currentUsername = username;
                     messageLabel.setForeground(Color.GREEN);
                     messageLabel.setText("Login Successful!");
 
@@ -277,6 +279,10 @@ public class Loginpage extends JPanel {
         return registerPanel;
     }
 
+    public class UserSession {
+        public static String currentUsername = null;
+    }
+
     private boolean validateLogin(String username, String password) {
         // Check against our simple database
         String storedPassword = userDatabase.get(username);
@@ -285,7 +291,7 @@ public class Loginpage extends JPanel {
 
     private void startGame() {
         parentFrame.getContentPane().removeAll();
-        FlappyBird flappyBird = new FlappyBird();
+        FlappyBird flappyBird = new FlappyBird(mongoDB);
         parentFrame.add(flappyBird);
         parentFrame.revalidate();
         parentFrame.repaint();

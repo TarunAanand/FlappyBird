@@ -2,6 +2,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
 class MongoDB {
@@ -21,6 +22,7 @@ class MongoDB {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     public boolean registerUser(String username, String password) {
@@ -32,7 +34,8 @@ class MongoDB {
 
         // Create a document for the new user
         Document newUser = new Document("username", username)
-                .append("password", password);
+                .append("password", password)
+                        .append("score", 0);
 
         // Insert the new user into the collection
         usersCollection.insertOne(newUser);
@@ -48,4 +51,23 @@ class MongoDB {
 
         return userDoc != null;  // Returns true if user exists, false otherwise
     }
+
+    public int getUserScore(String username) {
+        Document userDoc = usersCollection.find(Filters.eq("username", username)).first();
+
+        if (userDoc != null && userDoc.containsKey("score")) {
+            return userDoc.getInteger("score", 0); // Returns the score if it exists, 0 otherwise
+        } else {
+            return 0; // Default score if user doesn't exist or no score is found
+        }
+    }
+
+    public void updateScore(String username, int newScore) {
+        Document filter = new Document("username", username);
+        Document update = new Document("$set", new Document("score", newScore));
+
+        usersCollection.updateOne(filter, update);
+        System.out.println("Score updated for user: " + username);
+    }
+
 }

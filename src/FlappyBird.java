@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
 
+
 public class FlappyBird extends JPanel implements ActionListener, KeyListener {
+    public MongoDB mongoDB;
+    public int gameScore;
+
+
     int boardWidth = 360;
     int boardHeight = 640;
 
@@ -65,7 +70,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     boolean gameOver = false;
     double score = 0;
 
-    FlappyBird() {
+    FlappyBird(MongoDB mongoDB) {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         // setBackground(Color.blue);
         setFocusable(true);
@@ -77,6 +82,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         topPipeImg = new ImageIcon(getClass().getResource("./toppipe.png")).getImage();
         bottomPipeImg = new ImageIcon(getClass().getResource("./bottompipe.png")).getImage();
 
+        this.mongoDB = mongoDB;
         //bird
         bird = new Bird(birdImg);
         pipes = new ArrayList<Pipe>();
@@ -121,9 +127,10 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
 	public void draw(Graphics g) {
         //background
         g.drawImage(backgroundImg, 0, 0, this.boardWidth, this.boardHeight, null);
-
-        //bird
-        g.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height, null);
+        //birds
+        if (bird != null ) {
+            g.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height, null);
+        }
 
         //pipes
         for (int i = 0; i < pipes.size(); i++) {
@@ -136,12 +143,18 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
 
         g.setFont(new Font("Arial", Font.PLAIN, 32));
         if (gameOver) {
+            gameScore = (int) score;
+            System.out.println(gameScore);
+            int currentUserScore = mongoDB.getUserScore(Loginpage.UserSession.currentUsername);
+            if (gameScore > currentUserScore) {
+                mongoDB.updateScore(Loginpage.UserSession.currentUsername, gameScore);
+            }
             g.drawString("Game Over: " + String.valueOf((int) score), 10, 35);
         }
         else {
             g.drawString(String.valueOf((int) score), 10, 35);
         }
-        
+
 	}
 
     public void move() {
@@ -169,6 +182,8 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
             gameOver = true;
         }
     }
+
+
 
     boolean collision(Bird a, Pipe b) {
         return a.x < b.x + b.width &&   //a's top left corner doesn't reach b's top right corner
